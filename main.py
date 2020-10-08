@@ -1,4 +1,5 @@
 import api
+import time
 from game_layer import GameLayer
 
 f=open("apikey.txt", "r")
@@ -16,6 +17,7 @@ def main():
     game_layer.start_game()
     while game_layer.game_state.turn < game_layer.game_state.max_turns:
         take_turn()
+        time.sleep(.500)
     print("Done with game: " + game_layer.game_state.game_id)
     print("Final score was: " + str(game_layer.get_score()["finalScore"]))
 
@@ -60,6 +62,16 @@ def take_turn():
             hot_stuff_list.append(i)
             hot_stuff_temperature.append(state.residences[i].temperature)
             hot_stuff_residences.append(state.residences[i])
+
+    #Scan for unbuilt stuff
+    unbuilt_stuff_list = []
+    unbuilt_stuff_build_progress = []
+    unbuilt_stuff_residences = []
+    for i in range(len(state.residences)):
+        if state.residences[i].build_progress < 100:
+            unbuilt_stuff_list.append(i)
+            unbuilt_stuff_build_progress.append(state.residences[i].build_progress)
+            unbuilt_stuff_residences.append(state.residences[i])
     
 
     #If got broken stuff, fix it
@@ -78,6 +90,7 @@ def take_turn():
                     + (state.residences[cold_stuff_building].temperature - state.current_temp) * blueprint.emissivity / 1 \
                     - state.residences[cold_stuff_building].current_pop * 0.04
         game_layer.adjust_energy_level((state.residences[cold_stuff_building].X, state.residences[cold_stuff_building].Y), energy)
+    #If got hot stuff, cold it
     elif len(hot_stuff_list) > 0:
         hot_stuff_value = min(hot_stuff_temperature)
         hot_stuff_index = hot_stuff_temperature.index(hot_stuff_value)
@@ -87,10 +100,15 @@ def take_turn():
                     + (state.residences[hot_stuff_building].temperature - state.current_temp) * blueprint.emissivity / 1 \
                     - state.residences[hot_stuff_building].current_pop * 0.04
         game_layer.adjust_energy_level((state.residences[hot_stuff_building].X, state.residences[hot_stuff_building].Y), energy)
+    #If got unbuilt stuff, keep building it
+    elif len(unbuilt_stuff_list) > 0:
+        unbuilt_stuff_value = min(unbuilt_stuff_build_progress)
+        unbuilt_stuff_index = unbuilt_stuff_build_progress.index(unbuilt_stuff_value)
+        unbuilt_stuff_building = unbuilt_stuff_list[unbuilt_stuff_index]
+        game_layer.build((state.residences[unbuilt_stuff_building].X, state.residences[unbuilt_stuff_building].Y))
 
-
-
-    if len(state.residences) < 1:
+    #If can build, build it
+    else:
         for i in range(len(state.map)):
             for j in range(len(state.map)):
                 if state.map[i][j] == 0:
@@ -98,28 +116,15 @@ def take_turn():
                     y = j
                     break
         game_layer.place_foundation((x, y), game_layer.game_state.available_residence_buildings[0].building_name)
-    else:
-        the_only_residence = state.residences[0]
-        if the_only_residence.build_progress < 100:
-            game_layer.build((the_only_residence.X, the_only_residence.Y))
-        #elif the_only_residence.health < 50:
-        #    game_layer.maintenance((the_only_residence.X, the_only_residence.Y))
-        #elif the_only_residence.temperature < 18:
-        #    blueprint = game_layer.get_residence_blueprint(the_only_residence.building_name)
-        #    energy = blueprint.base_energy_need + 0.5 \
-        #             + (the_only_residence.temperature - state.current_temp) * blueprint.emissivity / 1 \
-        #             - the_only_residence.current_pop * 0.04
-        #    game_layer.adjust_energy_level((the_only_residence.X, the_only_residence.Y), energy)
-        #elif the_only_residence.temperature > 24:
-        #    blueprint = game_layer.get_residence_blueprint(the_only_residence.building_name)
-        #    energy = blueprint.base_energy_need - 0.5 \
-        #             + (the_only_residence.temperature - state.current_temp) * blueprint.emissivity / 1 \
-        #             - the_only_residence.current_pop * 0.04
-        #    game_layer.adjust_energy_level((the_only_residence.X, the_only_residence.Y), energy)
-        elif state.available_upgrades[0].name not in the_only_residence.effects:
-            game_layer.buy_upgrade((the_only_residence.X, the_only_residence.Y), state.available_upgrades[0].name)
-        else:
-            game_layer.wait()
+
+    #else:
+    #    the_only_residence = state.residences[0]
+    #    if the_only_residence.build_progress < 100:
+    #        game_layer.build((the_only_residence.X, the_only_residence.Y))
+    #    elif state.available_upgrades[0].name not in the_only_residence.effects:
+    #        game_layer.buy_upgrade((the_only_residence.X, the_only_residence.Y), state.available_upgrades[0].name)
+    #    else:
+    #        game_layer.wait()
     for message in game_layer.game_state.messages:
         print(message)
     for error in game_layer.game_state.errors:
