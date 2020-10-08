@@ -6,7 +6,7 @@ f=open("apikey.txt", "r")
 api_key = f.read()
 f.close()
 
-map_name = "training1"  # TODO: You map choice here. If left empty, the map "training1" will be selected.
+map_name = "Gothenburg"  # TODO: You map choice here. If left empty, the map "training1" will be selected.
 
 game_layer = GameLayer(api_key)
 
@@ -17,7 +17,6 @@ def main():
     game_layer.start_game()
     while game_layer.game_state.turn < game_layer.game_state.max_turns:
         take_turn()
-        time.sleep(.500)
     print("Done with game: " + game_layer.game_state.game_id)
     print("Final score was: " + str(game_layer.get_score()["finalScore"]))
 
@@ -38,7 +37,7 @@ def take_turn():
     broken_stuff_health = []
     broken_stuff_residences = []
     for i in range(len(state.residences)):
-        if state.residences[i].health < 40+(0.5*len(state.residences)):
+        if state.residences[i].health < 40:
             broken_stuff_list.append(i)
             broken_stuff_health.append(state.residences[i].health)
             broken_stuff_residences.append(state.residences[i])
@@ -48,7 +47,7 @@ def take_turn():
     cold_stuff_temperature = []
     cold_stuff_residences = []
     for i in range(len(state.residences)):
-        if state.residences[i].temperature < 17:
+        if state.residences[i].temperature < 16:
             cold_stuff_list.append(i)
             cold_stuff_temperature.append(state.residences[i].temperature)
             cold_stuff_residences.append(state.residences[i])
@@ -58,7 +57,7 @@ def take_turn():
     hot_stuff_temperature = []
     hot_stuff_residences = []
     for i in range(len(state.residences)):
-        if state.residences[i].temperature > 25:
+        if state.residences[i].temperature > 26:
             hot_stuff_list.append(i)
             hot_stuff_temperature.append(state.residences[i].temperature)
             hot_stuff_residences.append(state.residences[i])
@@ -108,14 +107,16 @@ def take_turn():
         game_layer.build((state.residences[unbuilt_stuff_building].X, state.residences[unbuilt_stuff_building].Y))
 
     #If can build, build it
-    else:
+    elif len(state.residences) < 2:
         for i in range(len(state.map)):
             for j in range(len(state.map)):
                 if state.map[i][j] == 0:
                     x = i
                     y = j
                     break
-        game_layer.place_foundation((x, y), game_layer.game_state.available_residence_buildings[0].building_name)
+        game_layer.place_foundation((x, y), game_layer.game_state.available_residence_buildings[3].building_name)
+    else:
+        game_layer.wait()
 
     #else:
     #    the_only_residence = state.residences[0]
@@ -129,7 +130,6 @@ def take_turn():
         print(message)
     for error in game_layer.game_state.errors:
         print("Error: " + error)
-
 
 if __name__ == "__main__":
     main()
