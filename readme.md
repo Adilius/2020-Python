@@ -1,3 +1,10 @@
+# Score Considition 2020 for Adilius (using playername Disnoc)
+Placed 29 of 47 teams across Sweden while competing alone
+
+![Score](https://user-images.githubusercontent.com/43440295/95612010-ec273f80-0a62-11eb-8875-c984c0f654c2.PNG)
+
+[Highscore link](https://considition.com/highscore)
+
 # StarterKit Python Considition 2020
 This is the StarterKit for Considition 2020, a help to get going as quickly as possible with the competition. The StarterKit contains four main parts.
 
